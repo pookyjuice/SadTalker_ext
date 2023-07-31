@@ -36,9 +36,14 @@ class SadTalker():
     def test(self, source_image, driven_audio, preprocess='crop', 
         still_mode=False,  use_enhancer=False, batch_size=1, size=256, 
         pose_style = 0, exp_scale=1.0, 
+        yaw_values = None,
+        pitch_values = None,
+        roll_values = None,
         use_ref_video = False,
         ref_video = None,
         ref_info = None,
+        use_blink_video = False,
+        blink_video = None,
         use_idle_mode = False,
         length_of_audio = 0, use_blink=True,
         result_dir='./results/'):
@@ -123,7 +128,17 @@ class SadTalker():
                 ref_eyeblink_coeff_path = None
             else:
                 raise('error in refinfo')
-        else:
+            
+        if use_blink_video:
+            print('using ref video for genreation')
+            blink_video_videoname = os.path.splitext(os.path.split(blink_video)[-1])[0]
+            blink_video_frame_dir = os.path.join(save_dir, blink_video_videoname)
+            os.makedirs(blink_video_frame_dir, exist_ok=True)
+            print('3DMM Extraction for the reference video providing pose')
+            blink_video_coeff_path, _, _ = self.preprocess_model.generate(blink_video, blink_video_frame_dir, preprocess, source_image_flag=False)
+            ref_eyeblink_coeff_path = blink_video_coeff_path
+
+        elif not use_ref_video and not use_blink_video:
             ref_pose_coeff_path = None
             ref_eyeblink_coeff_path = None
 
@@ -135,7 +150,7 @@ class SadTalker():
             coeff_path = self.audio_to_coeff.generate(batch, save_dir, pose_style, ref_pose_coeff_path)
 
         #coeff2video
-        data = get_facerender_data(coeff_path, crop_pic_path, first_coeff_path, audio_path, batch_size, still_mode=still_mode, preprocess=preprocess, size=size, expression_scale = exp_scale)
+        data = get_facerender_data(coeff_path, crop_pic_path, first_coeff_path, audio_path, batch_size, yaw_values, pitch_values, roll_values, still_mode=still_mode, preprocess=preprocess, size=size, expression_scale = exp_scale)
         return_path = self.animate_from_coeff.generate(data, save_dir,  pic_path, crop_info, enhancer='gfpgan' if use_enhancer else None, preprocess=preprocess, img_size=size)
         video_name = data['video_name']
         print(f'The generated video is named {video_name} in {save_dir}')

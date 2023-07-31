@@ -73,13 +73,19 @@ def get_facerender_data(coeff_path, pic_path, first_coeff_path, audio_path,
     data['video_name'] = video_name
     data['audio_path'] = audio_path
     
-    if input_yaw_list is not None:
+    if input_yaw_list is not None and len(input_yaw_list.strip()):
+        print(f'yaw values : {input_yaw_list}')
+        input_yaw_list = [int(i) for i in input_yaw_list.split()]
         yaw_c_seq = gen_camera_pose(input_yaw_list, frame_num, batch_size)
         data['yaw_c_seq'] = torch.FloatTensor(yaw_c_seq)
-    if input_pitch_list is not None:
+    if input_pitch_list is not None and len(input_pitch_list.strip()):
+        print(f'pitch values : {input_pitch_list}')
+        input_pitch_list = [int(i) for i in input_pitch_list.split()]
         pitch_c_seq = gen_camera_pose(input_pitch_list, frame_num, batch_size)
         data['pitch_c_seq'] = torch.FloatTensor(pitch_c_seq)
-    if input_roll_list is not None:
+    if input_roll_list is not None and len(input_roll_list.strip()):
+        print(f'roll values : {input_roll_list}')
+        input_roll_list = [int(i) for i in input_roll_list.split()]
         roll_c_seq = gen_camera_pose(input_roll_list, frame_num, batch_size) 
         data['roll_c_seq'] = torch.FloatTensor(roll_c_seq)
  

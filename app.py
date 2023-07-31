@@ -21,6 +21,18 @@ def ref_video_fn(path_of_ref_video):
         return gr.update(value=True)
     else:
         return gr.update(value=False)
+    
+def blink_video_fn(path_of_blink_video):
+    if path_of_blink_video is not None:
+        return gr.update(value=True)
+    else:
+        return gr.update(value=False)
+    
+def toggle_blink_file(selection):
+    if selection in ['blink','pose+blink']:
+        return gr.update(visible=False), gr.update(visible=False)
+    else:
+        return gr.update(visible=True), gr.update(visible=True)
 
 
 def sadtalker_demo(checkpoint_path='checkpoints', config_path='src/config', warpfn=None):
@@ -65,12 +77,20 @@ def sadtalker_demo(checkpoint_path='checkpoints', config_path='src/config', warp
                                             tts.click(fn=tts_talker.test, inputs=[input_text], outputs=[driven_audio])
 
                         with gr.Row():
+                            blink_video = gr.Video(label="Blink Video", source="upload", type="filepath", elem_id="blinkref").style(width=512)
+
+                            with gr.Column():
+                                use_blink_video = gr.Checkbox(label="Use Blink Video")
+                                
+                            blink_video.change(blink_video_fn, inputs=blink_video, outputs=[use_blink_video]) # todo
+
+                        with gr.Row():
                             ref_video = gr.Video(label="Reference Video", source="upload", type="filepath", elem_id="vidref").style(width=512)
 
                             with gr.Column():
                                 use_ref_video = gr.Checkbox(label="Use Reference Video")
                                 ref_info = gr.Radio(['pose', 'blink','pose+blink', 'all'], value='pose', label='Reference Video',info="How to borrow from reference Video?((fully transfer, aka, video driving mode))")
-
+                                ref_info.change(toggle_blink_file, inputs=ref_info, outputs=[blink_video, use_blink_video])
                             ref_video.change(ref_video_fn, inputs=ref_video, outputs=[use_ref_video]) # todo
 
 
@@ -90,6 +110,11 @@ def sadtalker_demo(checkpoint_path='checkpoints', config_path='src/config', warp
                                 size_of_image = gr.Radio([256, 512], value=256, label='face model resolution', info="use 256/512 model?") # 
                                 preprocess_type = gr.Radio(['crop', 'resize','full', 'extcrop', 'extfull'], value='crop', label='preprocess', info="How to handle input image?")
                             
+                            with gr.Row():
+                                yaw_rot_list = gr.Textbox(label="yaw values list", value="") # 
+                                pitch_rot_list = gr.Textbox(label="pitch values list", value="") # 
+                                roll_rot_list = gr.Textbox(label="roll values list", value="") # 
+                                
                             with gr.Row():
                                 is_still_mode = gr.Checkbox(label="Still Mode (fewer head motion, works with preprocess `full`)")
                                 batch_size = gr.Slider(label="batch size in generation", step=1, maximum=10, value=1)
@@ -111,9 +136,14 @@ def sadtalker_demo(checkpoint_path='checkpoints', config_path='src/config', warp
                             size_of_image,
                             pose_style,
                             exp_weight,
+                            yaw_rot_list,
+                            pitch_rot_list,
+                            roll_rot_list,
                             use_ref_video,
                             ref_video,
                             ref_info,
+                            use_blink_video,
+                            blink_video,
                             use_idle_mode,
                             length_of_audio,
                             blink_every
